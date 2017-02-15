@@ -1,10 +1,11 @@
-var cSize, degree, angle, scaleFactor, lastBreak;
+var cSize, degree, angle, scaleFactor, lastBreak, degSlide;
 
 function setup() {
   cSize = min(windowWidth, windowHeight);
   angle = radians(2);
-  setDegree(3);
-  lastBreak = 0;
+  degSlide = createSlider(3, 1000, 400);
+  degSlide.changed(reset);
+  setDegree(degSlide.value())
 
   createCanvas(cSize, cSize);
   setFrameRate(30);
@@ -22,7 +23,14 @@ function setDegree(deg) {
 function drawPoly() {
   beginShape();
   for(var i = 0; i < degree; i++) {
-    vertex(cSize * cos(i * TWO_PI / degree) / 2, cSize * sin(i * TWO_PI / degree) / 2);
+    strokeWeight(log(frameCount) / degree);
+    var vx = sin(i * TWO_PI / degree) / 2;
+    var vy = cos(i * TWO_PI / degree) / 2;
+    for(var t = 0; t < log(log(degree)); t++) {
+      vx *= cos(vx * log(frameCount));
+      vy *= cos(vy * log(frameCount));
+    }
+    vertex(cSize * vx, cSize * vy);
   }
   endShape(CLOSE);
 }
@@ -30,15 +38,15 @@ function drawPoly() {
 function draw() {
   var f = frameCount - lastBreak;
   var sf = pow(scaleFactor, f);
-  if(sf * cSize < 10) {
-    background(0);
-    setDegree(degree + 1);
-    lastBreak = frameCount;
-    return;
-  }
-  stroke((frameCount * 10 / degree) % 360, 100, 100);
+  stroke((log(frameCount) * degree) % 360, 100, 100);
   translate(width / 2, height /2);
-  rotate(f * angle);
+  rotate(sin(f / degree) * angle * degree);
   scale(sf);
   drawPoly();
+}
+
+function reset() {
+  background(0);
+  lastBreak = frameCount
+  setDegree(degSlide.value());
 }
